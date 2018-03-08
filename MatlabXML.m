@@ -1,5 +1,5 @@
-function element = MatlabXML(filename)
-%MatlabXML reads an XML file into a nested MatlabXMLElements
+function element = MatlabXML(filename, showProgress)
+%MatlabXML(filename) reads an XML file into nested MatlabXMLElements
 %   Why not use xmlread? Because xmlread will choke on large files.
 %
 %   Each MatlabXMLElement is an object with properties:
@@ -10,16 +10,29 @@ function element = MatlabXML(filename)
 %   The returned MatlabXMLElement is always "#document#", with the XML
 %   declaration attributes as attributes and the root element as its
 %   only child.
+%
+%   MatlabXML(..., showProgress) controls wether a progress counter is
+%       shown while parsing. By default, a progress counter is shown
+%       for files with more than 1000 elements.
 
     allData = fileread(filename);
     tagOpen = strfind(allData, '<');
     tagClose = strfind(allData, '>');
 
+    if ~exist('showProgress') || isempty(showProgress)
+        showProgress = length(tagOpen) > 1000;
+    end
+
+    if showProgress
+        fprintf(repmat(' ', 1, 21));
+    end
+
     stack = MatlabXMLElement('#document#', containers.Map());
     for tagIdx=1:length(tagOpen)
-        if mod(tagIdx, 100) == 0
+        if showProgress && mod(tagIdx, 100) == 0
             fprintf([repmat('\b', 1, 21) '%10i/%10i'], tagIdx, length(tagOpen));
         end
+
         start = tagOpen(tagIdx);
         stop = tagClose(tagIdx);
 
@@ -62,6 +75,10 @@ function element = MatlabXML(filename)
             AddChild(stack(end), element);
         end
     end
-    fprintf(repmat('\b', 1, 22));
+
+    if showProgress
+        fprintf([repmat('\b', 1, 21) repmat(' ', 1, 21) repmat('\b', 1, 21)]);
+    end
+
     element = stack(1);
 end
