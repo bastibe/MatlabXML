@@ -28,7 +28,7 @@ function element = MatlabXML(filename)
 
         % Special-case XML declaration
         if tagIdx == 1 && tagData(1) == '?' && tagData(end) == '?'
-            tagData = strip(tagData, '?');
+            tagData = tagData(2:end-1);
             attrs = regexp(tagData, '(?<key>\w+)="(?<value>[^"]*)"', 'names');
             for attr=attrs
                 stack(end).Attributes(attr.key) = attr.value;
@@ -38,7 +38,11 @@ function element = MatlabXML(filename)
 
         isComplete = tagData(end) == '/';
         isOpening = tagData(1) ~= '/';
-        tagData = strip(tagData, '/');
+        if isComplete
+            tagData = tagData(1:end-1);
+        elseif ~isOpening
+            tagData = tagData(2:end);
+        end
 
         tagName = regexp(tagData, '^(?<name>\w+)', 'names');
         tagName = tagName.name;
