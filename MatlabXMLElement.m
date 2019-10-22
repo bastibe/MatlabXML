@@ -73,6 +73,13 @@ classdef MatlabXMLElement < handle
         end
 
         function children = findChildren(obj, name, attributes)
+            %findChildren searches for children with a name and attributes
+            %   findChildren(name) returns all children with the given Name.
+            %   findChildren([], attributes) returns all children with
+            %        the same attributes (as struct or containers.Map).
+            %   findChildren(name, attributes) returns all children with matching
+            %        name and attributes.
+
             % normalize attributes to containers.Map:
             if exist("attributes") && isstruct(attributes)
                 attributes = containers.Map(fieldnames(attributes), ...
