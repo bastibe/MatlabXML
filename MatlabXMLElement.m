@@ -71,5 +71,45 @@ classdef MatlabXMLElement < handle
         function children = get.Children(obj)
             children = obj.ChildrenData(1:obj.ChildIdx);
         end
+
+        function children = findChildren(obj, name, attributes)
+            % normalize attributes to containers.Map:
+            if exist("attributes") && isstruct(attributes)
+                attributes = containers.Map(fieldnames(attributes), ...
+                                            struct2cell(attributes));
+            end
+
+            % search through all children:
+            children = [];
+            for child = obj.Children
+                % check if name matches:
+                if exist("name") && ~isempty(name)
+                    if ~strcmp(name, child.Name)
+                        continue
+                    end
+                end
+                % check if attributes match:
+                if exist("attributes") && ~isempty(attributes)
+                    keep = true;
+                    for k=keys(attributes)
+                        k = k{1};
+                        if ~child.Attributes.isKey(k) || ~strcmp(attributes(k), child.Attributes(k))
+                            % doesn't match:
+                            keep = false;
+                            break;
+                        end
+                    end
+                    if ~keep
+                        continue
+                    end
+                end
+                % collect all matching children:
+                if isempty(children)
+                    children = child;
+                else
+                    children(end+1) = child;
+                end
+            end
+        end
     end
 end
