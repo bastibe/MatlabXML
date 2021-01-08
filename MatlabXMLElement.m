@@ -30,6 +30,7 @@ classdef MatlabXMLElement < handle
     properties
         Name
         Attributes
+        Value
     end
 
     properties (Dependent)
@@ -42,11 +43,12 @@ classdef MatlabXMLElement < handle
     end
 
     methods
-        function obj = MatlabXMLElement(name, attributes)
+        function obj = MatlabXMLElement(name, attributes, Value)
             obj.Name = name;
             obj.Attributes = attributes;
             obj.ChildrenData = [];
             obj.ChildIdx = 0;
+            obj.Value = Value;
         end
 
         function AddChild(obj, child)
@@ -57,6 +59,7 @@ classdef MatlabXMLElement < handle
             if isempty(obj.ChildrenData)
                 obj.ChildrenData = child;
                 obj.ChildIdx = 1;
+                obj.Value = ' ';
                 return
             end
 
