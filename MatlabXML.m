@@ -33,7 +33,9 @@ function element = MatlabXML(filename, showProgress)
     allData = fileread(filename);
     tagOpen = strfind(allData, '<');
     tagClose = strfind(allData, '>');
-
+    tagValue = strfind(allData, '</');
+    tagValueIndex = 1;
+    
     if ~exist('showProgress') || isempty(showProgress)
         showProgress = length(tagOpen) > 1000;
     end
@@ -42,7 +44,7 @@ function element = MatlabXML(filename, showProgress)
         fprintf(repmat(' ', 1, 21));
     end
 
-    stack = MatlabXMLElement('#document#', containers.Map());
+    stack = MatlabXMLElement('#document#', containers.Map(), ' ');
     for tagIdx=1:length(tagOpen)
         if showProgress && mod(tagIdx, 100) == 0
             fprintf([repmat('\b', 1, 21) '%10i/%10i'], tagIdx, length(tagOpen));
@@ -54,6 +56,14 @@ function element = MatlabXML(filename, showProgress)
 
         tagData = allData(start+1:stop-1);
 
+        value = ' ';
+        if tagIdx ~= length(tagOpen)
+            if tagOpen(tagIdx+1) == tagValue(tagValueIndex)
+                value = (allData(tagClose(tagIdx+1-1)+1:tagOpen(tagIdx+1)-1));
+                tagValueIndex = tagValueIndex + 1;
+            end
+        end
+        
         % Special-case XML declaration
         if tagIdx == 1 && tagData(1) == '?' && tagData(end) == '?'
             tagData = tagData(2:end-1);
@@ -61,6 +71,10 @@ function element = MatlabXML(filename, showProgress)
             for attr=attrs
                 stack(end).Attributes(attr.key) = attr.value;
             end
+            continue
+        end
+        
+        if tagData(1) == '!'
             continue
         end
 
@@ -81,9 +95,9 @@ function element = MatlabXML(filename, showProgress)
         end
 
         if isComplete
-            AddChild(stack(end), MatlabXMLElement(tagName, tagAttrs));
+            AddChild(stack(end), MatlabXMLElement(tagName, tagAttrs, value));
         elseif isOpening
-            stack = [stack MatlabXMLElement(tagName, tagAttrs)];
+            stack = [stack MatlabXMLElement(tagName, tagAttrs, value)];
         else % is closing
             element = stack(end);
             stack = stack(1:end-1);
